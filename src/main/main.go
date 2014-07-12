@@ -14,19 +14,28 @@ func main() {
 		fmt.Println("Error creating file", err)
 		os.Exit(1)
 	}
+	defer file.Close()
+	
 	multiwriter := io.MultiWriter(file, os.Stdout)
 	log := log.New(multiwriter, "Logger\t", log.Lshortfile)
 	
-	limit := 3
+	limit := 10
 	sub := new(api.Subreddit)
 	sub.Name = "gifs"
-	links, err := sub.GetSub(log, api.NEW, limit)
+	page, err := sub.GetSub(log, api.TOP, "", limit)
 	if err != nil {
-		log.Println("Error getting sub", err)
-		os.Exit(1)
+		log.Fatalln("Error getting sub", err)
 	}
 	
-	for _, value := range links {
-		fmt.Println(value)
+	log.Println(page)
+
+	
+	page, err = sub.NextPage(log)
+	
+	if err != nil {
+		log.Fatalln("Error getting sub", err)
 	}
+	
+	log.Println(page)
+
 }
