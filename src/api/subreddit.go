@@ -11,13 +11,18 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"errors"
 )
 
-//Enum that represents the sections within a subreddit
+//Enum that represents the sections within a subreddit, or
+//next-page, prev-page
 const (
 	HOT int = iota
 	NEW int = iota
 	TOP int = iota
+	
+	NEXT int = iota
+	PREV int = iota	
 )
 
 //Subreddit is a struct that represents a page of links
@@ -27,30 +32,9 @@ type Subreddit struct {
 	Page Page   //the page that we are currently viewing
 }
 
-//Page is a struct that represents the current page of a subreddit
-type Page struct {
-	Top     Link   //first link
-	Bottom  Link   //last link
-	Links   []Link //all links
-	Section int    //Enum (HOT, NEW, TOP)
-}
-
-//Link is a struct that holds information about a specific
-//link on a page within a subreddit
-type Link struct {
-	Title   string
-	Score   int
-	Domain  string //either self.Title or a web domain
-	Url     string //url to the link
-	Name    string //Fullname
-	Author  string
-	Ups     int
-	Downs   int
-	Created float64 //Date created
-}
 
 //GetSub will query Reddit's servers for the JSON of a target subreddit.
-func (s *Subreddit) GetSub(log *log.Logger, section int, after string, limit int) (page Page, err error) {
+func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (page Page, err error) {
 	if limit < 0 {
 		limit = 10
 	}
@@ -75,8 +59,15 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, after string, limit int
 	str += s.Name + "/"
 	str += sec + ".json"
 	str += "?limit=" + strconv.Itoa(limit)
-	if after != "" {
-		str += "&after=" + after
+	
+	switch place {
+		case NEXT:
+			str += "&after=" + s.Page.Bottom.Name
+			log.Println("Retrieving the next page")
+		case PREV:
+			str += "&before=" + s.Page.Top.Name
+			log.Println("Retrieving the previous page")
+		default:
 	}
 	log.Println("Request string is", str)
 
@@ -109,7 +100,10 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, after string, limit int
 	responses := listing.Data.Children
 	count := len(responses)
 	log.Printf("Received %d links.", count)
-
+	if count < 1 {
+		err = errors.New("No links received")
+		return Page{}, err
+	}
 	links := make([]Link, count)
 
 	//Place the links in a slice
@@ -124,36 +118,7 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, after string, limit int
 
 //NextPage will use the GetSub() function to get the next page
 //of a subreddit
-func (s *Subreddit) NextPage(log *log.Logger) (page Page, err error) {
+func (s *Subreddit) GetPage(log *log.Logger, place int) (page Page, err error) {
 	log.Println("Getting next page")
-	return s.GetSub(log, s.Page.Section, s.Page.Bottom.Name, len(s.Page.Links))
-}
-
-//String method for the Link type
-//Prints all of the information about a link
-func (link Link) String() string {
-	result := ""
-
-	result += "Title is: \t" + link.Title + "\n"
-	result += "Score is: \t" + strconv.Itoa(link.Score) + "\n"
-	result += "Upvotes: \t" + strconv.Itoa(link.Ups) + "\n"
-	result += "Downvotes: \t" + strconv.Itoa(link.Downs) + "\n"
-	result += "URL is: \t" + link.Url + "\n"
-	result += "Domain is: \t" + link.Domain + "\n"
-	result += "Fullname is: \t" + link.Name
-
-	return result
-}
-
-//String method for the Page type
-//Prints all of the information about a page, including links
-func (page Page) String() string {
-	result := ""
-
-	result += "Page contains " + strconv.Itoa(len(page.Links)) + " links\n"
-	for _, value := range page.Links {
-		result += value.String() + "\n"
-	}
-
-	return result
+	return s.GetSub(log, s.Page.Section, place, len(s.Page.Links))
 }

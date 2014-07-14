@@ -11,7 +11,7 @@ import (
 func main() {
 	file, err := os.OpenFile("log.txt", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0666)
 	if err != nil {
-		fmt.Println("Error creating file", err)
+		fmt.Println("Error creating file:", err)
 		os.Exit(1)
 	}
 	defer file.Close()
@@ -22,19 +22,25 @@ func main() {
 	limit := 10
 	sub := new(api.Subreddit)
 	sub.Name = "gifs"
-	page, err := sub.GetSub(log, api.TOP, "", limit)
-	if err != nil {
-		log.Fatalln("Error getting sub", err)
-	}
 	
+	//get the front page of a subreddit's TOP section
+	page, err := sub.GetSub(log, api.TOP, 0, limit)
+	if err != nil {
+		log.Fatalln("Error getting sub:", err)
+	}
 	log.Println(page)
 
-	
-	page, err = sub.NextPage(log)
-	
+	//get the next page
+	page, err = sub.GetPage(log, api.NEXT)
 	if err != nil {
-		log.Fatalln("Error getting sub", err)
+		log.Fatalln("Error getting sub:", err)
 	}
+	log.Println(page)
 	
+	//get the previous page
+	page, err = sub.GetPage(log, api.PREV)
+	if err != nil {
+		log.Fatalln("Error getting sub:", err)
+	}
 	log.Println(page)
 }
