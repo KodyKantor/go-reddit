@@ -1,8 +1,8 @@
 package api
 
 import (
+	"log"
 	"strconv"
-
 )
 
 //Link is a struct that holds information about a specific
@@ -17,6 +17,10 @@ type Link struct {
 	Ups     int
 	Downs   int
 	Created float64 //Date created
+}
+
+func (link *Link) GetComments(log *log.Logger) {
+	// TODO implement func to retrieve comments of given link
 }
 
 //String method for the Link type
@@ -34,4 +38,3 @@ func (link Link) String() string {
 
 	return result
 }
-

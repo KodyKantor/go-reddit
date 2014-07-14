@@ -7,11 +7,11 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-	"errors"
 )
 
 //Enum that represents the sections within a subreddit, or
@@ -20,9 +20,11 @@ const (
 	HOT int = iota
 	NEW int = iota
 	TOP int = iota
-	
+
 	NEXT int = iota
-	PREV int = iota	
+	PREV int = iota
+
+	AGENT = "GoLang Reddit API by /u/kantosaurus"
 )
 
 //Subreddit is a struct that represents a page of links
@@ -31,7 +33,6 @@ type Subreddit struct {
 	Name string //name of subreddit
 	Page Page   //the page that we are currently viewing
 }
-
 
 //GetSub will query Reddit's servers for the JSON of a target subreddit.
 func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (page Page, err error) {
@@ -59,19 +60,23 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (
 	str += s.Name + "/"
 	str += sec + ".json"
 	str += "?limit=" + strconv.Itoa(limit)
-	
+
 	switch place {
-		case NEXT:
-			str += "&after=" + s.Page.Bottom.Name
-			log.Println("Retrieving the next page")
-		case PREV:
-			str += "&before=" + s.Page.Top.Name
-			log.Println("Retrieving the previous page")
-		default:
+	case NEXT:
+		str += "&after=" + s.Page.Bottom.Name
+		log.Println("Retrieving the next page")
+	case PREV:
+		str += "&before=" + s.Page.Top.Name
+		log.Println("Retrieving the previous page")
+	default:
 	}
 	log.Println("Request string is", str)
 
-	resp, err := http.Get(str)
+	client := http.Client{}
+	req, err := http.NewRequest("GET", str, nil)
+	req.Header.Set("User-Agent", AGENT)
+	resp, err := client.Do(req)
+
 	if err != nil {
 		log.Println("Error connecting:", err)
 		return Page{}, err
