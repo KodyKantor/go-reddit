@@ -30,18 +30,21 @@ func main() {
 	}
 	log.Println(page)
 
-	//get the next page
-	page, err = sub.GetPage(log, api.NEXT)
-	if err != nil {
-		log.Fatalln("Error getting sub:", err)
-	}
-	log.Println(page)
+	page.Top.GetComments(log)
+	/*
+		//get the next page
+		page, err = sub.GetPage(log, api.NEXT)
+		if err != nil {
+			log.Fatalln("Error getting sub:", err)
+		}
+		log.Println(page)
 
-	//get the previous page
-	page, err = sub.GetPage(log, api.PREV)
-	if err != nil {
-		log.Fatalln("Error getting sub:", err)
-	}
-	log.Println(page)
+		//get the previous page
+		page, err = sub.GetPage(log, api.PREV)
+		if err != nil {
+			log.Fatalln("Error getting sub:", err)
+		}
+		log.Println(page)
+	*/
 
 }

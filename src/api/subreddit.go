@@ -8,9 +8,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"log"
-	"net/http"
 	"strconv"
 )
 
@@ -72,23 +70,7 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (
 	}
 	log.Println("Request string is", str)
 
-	client := http.Client{}
-	req, err := http.NewRequest("GET", str, nil)
-	req.Header.Set("User-Agent", AGENT)
-	resp, err := client.Do(req)
-
-	if err != nil {
-		log.Println("Error connecting:", err)
-		return Page{}, err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		log.Println("Error reading response:", err)
-		return Page{}, err
-	}
+	body, err := ProcessRequest(str, "GET")
 
 	//A struct for parsing the repsonse JSON
 	type Listing struct {
