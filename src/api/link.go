@@ -3,6 +3,7 @@ package api
 import (
 	"log"
 	"strconv"
+	"encoding/json"
 )
 
 //Link is a struct that holds information about a specific
@@ -22,16 +23,32 @@ type Link struct {
 }
 
 func (link *Link) GetComments(log *log.Logger) {
-	request := "http://www.reddit.com/r/" + link.Subreddit + "/comments/" + link.Id + ".json"
+	request := "http://www.reddit.com/r/" + link.Subreddit + "/comments/" + link.Id + ".json?depth=2&limit=2"
 	log.Println("Request string is", request)
 	body, err := ProcessRequest(request, "GET")
 
 	if err != nil {
 		log.Println("Error getting comments:", err)
 	}
-
+	
+	type Listing []struct {
+		Data struct {
+			Children []struct {
+				Kind string
+				Data struct {
+					Body string
+					Edited bool
+					Ups int
+				}
+			}
+		}
+	}
 	log.Println("Json is", string(body))
-	//TODO implement json parsing
+	
+	var listing Listing
+	json.Unmarshal(body, &listing)
+	log.Println("Json is", listing[1].Data.Children[0].Data.Body)
+	
 }
 
 //String method for the Link type

@@ -19,7 +19,7 @@ func main() {
 	multiwriter := io.MultiWriter(file, os.Stdout)
 	log := log.New(multiwriter, "Logger\t", log.Lshortfile)
 
-	limit := 10
+	limit := 1
 	sub := new(api.Subreddit)
 	sub.Name = "gifs"
 
