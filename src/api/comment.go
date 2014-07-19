@@ -10,6 +10,7 @@ type Comment struct {
 	Body   string
 	Author string
 	Edited bool
+	Ups int
 }
 
 func (comment Comment) String() string {
@@ -18,6 +19,7 @@ func (comment Comment) String() string {
 	result += "Body is " + comment.Body + "\n"
 	result += "Author is " + comment.Author + "\n"
 	result += "Edited? " + strconv.FormatBool(comment.Edited) + "\n"
+	result += "Upvotes: " + strconv.Itoa(comment.Ups)
 
 	return result
 }

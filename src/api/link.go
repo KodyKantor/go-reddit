@@ -22,24 +22,29 @@ type Link struct {
 	Subreddit string
 }
 
-func (link *Link) GetComments(log *log.Logger) {
-	request := "http://www.reddit.com/r/" + link.Subreddit + "/comments/" + link.Id + ".json?depth=2&limit=2"
+// GetComments returns a slice of top-level comments on a link
+// TODO implement a way to retrieve sub-comments
+// this means that 'depth' is only supported for values <= 1
+func (link *Link) GetComments(log *log.Logger, depth, limit int) (comments []Comment, err error) {
+	if depth < 1 {
+		depth = 10
+	}
+	if limit < 1 {
+		limit = 10
+	}
+	request := "http://www.reddit.com/r/" + link.Subreddit + "/comments/" + link.Id + ".json?depth=" + strconv.Itoa(depth) + "&limit=" + strconv.Itoa(limit)
 	log.Println("Request string is", request)
 	body, err := ProcessRequest(request, "GET")
 
 	if err != nil {
-		log.Println("Error getting comments:", err)
+		return nil, err
 	}
 	
 	type Listing []struct {
 		Data struct {
 			Children []struct {
 				Kind string
-				Data struct {
-					Body string
-					Edited bool
-					Ups int
-				}
+				Data Comment
 			}
 		}
 	}
@@ -47,8 +52,13 @@ func (link *Link) GetComments(log *log.Logger) {
 	
 	var listing Listing
 	json.Unmarshal(body, &listing)
-	log.Println("Json is", listing[1].Data.Children[0].Data.Body)
 	
+	comments = make([]Comment, len(listing[1].Data.Children))
+	for i, entry := range listing[1].Data.Children {
+		comments[i] = entry.Data
+	}
+	
+	return comments, err
 }
 
 //String method for the Link type
