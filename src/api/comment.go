@@ -10,7 +10,7 @@ type Comment struct {
 	Body   string
 	Author string
 	Edited bool
-	Ups int
+	Ups    int
 }
 
 func (comment Comment) String() string {

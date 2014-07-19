@@ -34,11 +34,11 @@ func main() {
 	if err != nil {
 		log.Fatalln("Error getting comments on link:", err)
 	}
-	
+
 	for _, entry := range comments {
 		log.Println(entry)
 	}
-	
+
 	/*
 		//get the next page
 		page, err = sub.GetPage(log, api.NEXT)

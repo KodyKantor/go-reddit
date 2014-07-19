@@ -1,9 +1,9 @@
 package api
 
 import (
+	"encoding/json"
 	"log"
 	"strconv"
-	"encoding/json"
 )
 
 //Link is a struct that holds information about a specific
@@ -39,7 +39,7 @@ func (link *Link) GetComments(log *log.Logger, depth, limit int) (comments []Com
 	if err != nil {
 		return nil, err
 	}
-	
+
 	type Listing []struct {
 		Data struct {
 			Children []struct {
@@ -49,15 +49,15 @@ func (link *Link) GetComments(log *log.Logger, depth, limit int) (comments []Com
 		}
 	}
 	log.Println("Json is", string(body))
-	
+
 	var listing Listing
 	json.Unmarshal(body, &listing)
-	
+
 	comments = make([]Comment, len(listing[1].Data.Children))
 	for i, entry := range listing[1].Data.Children {
 		comments[i] = entry.Data
 	}
-	
+
 	return comments, err
 }
 

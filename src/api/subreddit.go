@@ -8,7 +8,9 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"log"
+	"os"
 	"strconv"
 )
 
@@ -33,7 +35,11 @@ type Subreddit struct {
 }
 
 //GetSub will query Reddit's servers for the JSON of a target subreddit.
-func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (page Page, err error) {
+func (s *Subreddit) GetSub(logger *log.Logger, section int, place int, limit int) (page Page, err error) {
+	if logger == nil {
+		writer := io.Writer(os.Stdout)
+		logger = log.New(writer, "Subreddit\t", log.LstdFlags)
+	}
 	if limit < 0 {
 		limit = 10
 	}
@@ -53,7 +59,7 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (
 		sec = "hot"
 	}
 
-	log.Printf("User is requesting %d '%s' articles.", limit, sec)
+	logger.Printf("User is requesting %d '%s' articles.", limit, sec)
 	str := "http://www.reddit.com/r/"
 	str += s.Name + "/"
 	str += sec + ".json"
@@ -62,15 +68,18 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (
 	switch place {
 	case NEXT:
 		str += "&after=" + s.Page.Bottom.Name
-		log.Println("Retrieving the next page")
+		logger.Println("Retrieving the next page")
 	case PREV:
 		str += "&before=" + s.Page.Top.Name
-		log.Println("Retrieving the previous page")
+		logger.Println("Retrieving the previous page")
 	default:
 	}
-	log.Println("Request string is", str)
+	logger.Println("Request string is", str)
 
 	body, err := ProcessRequest(str, "GET")
+	if err != nil {
+		return Page{}, err
+	}
 
 	//A struct for parsing the repsonse JSON
 	type Listing struct {
@@ -80,13 +89,13 @@ func (s *Subreddit) GetSub(log *log.Logger, section int, place int, limit int) (
 			}
 		}
 	}
-	log.Println("Json is", string(body))
+	logger.Println("Json is", string(body))
 	var listing Listing
 	json.Unmarshal(body, &listing)
 
 	responses := listing.Data.Children
 	count := len(responses)
-	log.Printf("Received %d links.", count)
+	logger.Printf("Received %d links.", count)
 	if count < 1 {
 		err = errors.New("No links received")
 		return Page{}, err
